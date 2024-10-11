@@ -44,6 +44,11 @@ import { getPoolKeys } from './utils/getPoolInfo'
 import { SWAP_ROUTING } from './constants'
 import { ApiPoolInfoV4 } from '@raydium-io/raydium-sdk'
 import { BN } from 'bn.js'
+ 
+interface WalletData {
+  kp: Keypair, 
+  buyAmount: number
+}
 
 export const solanaConnection = new Connection(RPC_ENDPOINT, {
   wsEndpoint: RPC_WEBSOCKET_ENDPOINT,
@@ -175,11 +180,6 @@ const main = async () => {
   })
 }
 
-interface WalletData {
-  kp: Keypair, 
-  buyAmount: number
-}
-
 const distributeSolAndToken = async (mainKp: Keypair, distritbutionNum: number, baseMint: PublicKey) => {
   const data: Data[] = []
   const wallets: WalletData[]  = []
@@ -249,7 +249,7 @@ const distributeSolAndToken = async (mainKp: Keypair, distritbutionNum: number, 
         }).compileToV0Message()
         const transaction = new VersionedTransaction(messageV0)
         transaction.sign([mainKp])
-        const txSig = await execute(transaction, latestBlockhash)
+        const txSig = await execute(solanaConnection, transaction, latestBlockhash)
         const tokenBuyTx = txSig ? `https://solscan.io/tx/${txSig}` : ''
         console.log("SOL and token distributed ", tokenBuyTx)
         break
@@ -304,7 +304,7 @@ const buy = async (newWallet: Keypair, baseMint: PublicKey, buyAmount: number, p
       return null
     }
     const latestBlockhash = await solanaConnection.getLatestBlockhash()
-    const txSig = await execute(tx, latestBlockhash)
+    const txSig = await execute(solanaConnection, tx, latestBlockhash)
     const tokenBuyTx = txSig ? `https://solscan.io/tx/${txSig}` : ''
     editJson({
       tokenBuyTx,
@@ -349,7 +349,7 @@ const sell = async (poolId: PublicKey, baseMint: PublicKey, wallet: Keypair, ind
       }
 
       const latestBlockhashForSell = await solanaConnection.getLatestBlockhash()
-      const txSellSig = await execute(sellTx, latestBlockhashForSell, false)
+      const txSellSig = await execute(solanaConnection, sellTx, latestBlockhashForSell, false)
       const tokenSellTx = txSellSig ? `https://solscan.io/tx/${txSellSig}` : ''
       const solBalance = await solanaConnection.getBalance(wallet.publicKey)
       editJson({
@@ -368,4 +368,3 @@ const sell = async (poolId: PublicKey, baseMint: PublicKey, wallet: Keypair, ind
 
 
 main()
-

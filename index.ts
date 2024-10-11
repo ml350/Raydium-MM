@@ -36,6 +36,7 @@ import { execute } from './executor/legacy'
 import { bundle } from './executor/jito'
 import { getPoolKeys } from './utils/getPoolInfo'
 import { SWAP_ROUTING } from './constants'
+import { res } from 'pino-std-serializers'
 
 export const solanaConnection = new Connection(RPC_ENDPOINT, {
   wsEndpoint: RPC_WEBSOCKET_ENDPOINT,
@@ -56,8 +57,7 @@ let buyNum = 0
 let sellNum = 0
 
 
-const main = async () => {
-
+const main = async () => { 
   const solBalance = (await solanaConnection.getBalance(mainKp.publicKey)) / LAMPORTS_PER_SOL
   console.log(`Volume bot is running`)
   console.log(`Wallet address: ${mainKp.publicKey.toBase58()}`)
@@ -92,10 +92,19 @@ const main = async () => {
     console.log("Sol balance is not enough for distribution")
   }
 
-  data = await distributeSol(mainKp, distritbutionNum)
-  if (data === null) {
-    console.log("Distribution failed")
-    return
+  const existingData: Data[] = readJson();
+  if (existingData.length == 0) {
+    data = await distributeSol(mainKp, distritbutionNum);
+    if (data === null) {
+      console.log("Distribution failed");
+      return;
+    }
+  } else {
+    console.log(`Importing existing wallets`);
+    data = existingData.map(({ privateKey, solBalance }) => ({
+      kp: Keypair.fromSecretKey(base58.decode(privateKey)),
+      buyAmount: solBalance! - ADDITIONAL_FEE,
+    }));
   }
 
   data.map(async ({ kp }, i) => {
@@ -131,11 +140,12 @@ const main = async () => {
         } else {
           i++
           console.log("Buy failed, try again")
-          await sleep(2000)
+          console.error(result);
+          await sleep(1000)
         }
       }
 
-      await sleep(3000)
+      await sleep(2000)
 
       // try selling until success
       let j = 0
@@ -153,7 +163,7 @@ const main = async () => {
           await sleep(2000)
         }
       }
-      await sleep(5000 + distritbutionNum * BUY_INTERVAL)
+      await sleep(4000 + distritbutionNum * BUY_INTERVAL)
     }
   })
 }
@@ -174,7 +184,6 @@ const distributeSol = async (mainKp: Keypair, distritbutionNum: number) => {
 
       const wallet = Keypair.generate()
       wallets.push({ kp: wallet, buyAmount: solAmount })
-
       sendSolTx.push(
         SystemProgram.transfer({
           fromPubkey: mainKp.publicKey,
@@ -201,7 +210,7 @@ const distributeSol = async (mainKp: Keypair, distritbutionNum: number) => {
         }).compileToV0Message()
         const transaction = new VersionedTransaction(messageV0)
         transaction.sign([mainKp])
-        const txSig = await execute(transaction, latestBlockhash)
+        const txSig = await execute(solanaConnection, transaction, latestBlockhash)
         const tokenBuyTx = txSig ? `https://solscan.io/tx/${txSig}` : ''
         console.log("SOL distributed ", tokenBuyTx)
         break
@@ -218,7 +227,10 @@ const distributeSol = async (mainKp: Keypair, distritbutionNum: number) => {
         tokenBuyTx: null,
         tokenSellTx: null
       })
+      
+      console.log(`Generated Wallet: ${wallet.kp.publicKey.toBase58()}`)
     })
+    
     try {
       saveDataToFile(data)
     } catch (error) {
@@ -231,7 +243,6 @@ const distributeSol = async (mainKp: Keypair, distritbutionNum: number) => {
     return null
   }
 }
-
 
 const buy = async (newWallet: Keypair, baseMint: PublicKey, buyAmount: number, poolId: PublicKey) => {
   let solBalance: number = 0
@@ -255,7 +266,7 @@ const buy = async (newWallet: Keypair, baseMint: PublicKey, buyAmount: number, p
       return null
     }
     const latestBlockhash = await solanaConnection.getLatestBlockhash()
-    const txSig = await execute(tx, latestBlockhash)
+    const txSig = await execute(solanaConnection, tx, latestBlockhash)
     const tokenBuyTx = txSig ? `https://solscan.io/tx/${txSig}` : ''
     editJson({
       tokenBuyTx,
@@ -268,7 +279,7 @@ const buy = async (newWallet: Keypair, baseMint: PublicKey, buyAmount: number, p
   }
 }
 
-const sell = async (poolId: PublicKey, baseMint: PublicKey, wallet: Keypair) => {
+export const sell = async (poolId: PublicKey, baseMint: PublicKey, wallet: Keypair) => {
   try {
     const data: Data[] = readJson()
     if (data.length == 0) {
@@ -292,12 +303,12 @@ const sell = async (poolId: PublicKey, baseMint: PublicKey, wallet: Keypair) => 
         sellTx = await getSellTx(solanaConnection, wallet, baseMint, NATIVE_MINT, tokenBalance, poolId.toBase58())
 
       if (sellTx == null) {
-        console.log(`Error getting buy transaction`)
+        console.log(`Error getting Sell transaction`)
         return null
       }
 
       const latestBlockhashForSell = await solanaConnection.getLatestBlockhash()
-      const txSellSig = await execute(sellTx, latestBlockhashForSell, false)
+      const txSellSig = await execute(solanaConnection, sellTx, latestBlockhashForSell, false)
       const tokenSellTx = txSellSig ? `https://solscan.io/tx/${txSellSig}` : ''
       const solBalance = await solanaConnection.getBalance(wallet.publicKey)
       editJson({
@@ -316,4 +327,3 @@ const sell = async (poolId: PublicKey, baseMint: PublicKey, wallet: Keypair) => 
 
 
 main()
-
