@@ -317,7 +317,7 @@ const buy = async (newWallet: Keypair, baseMint: PublicKey, buyAmount: number, p
   }
 }
 
-const sell = async (poolId: PublicKey, baseMint: PublicKey, wallet: Keypair, index: number, initBalance: number) => {
+export const sell = async (poolId: PublicKey, baseMint: PublicKey, wallet: Keypair, index: number, initBalance: number) => {
   const amount = initBalance * (SELL_ALL_BY_TIMES - index) / SELL_ALL_BY_TIMES
   
   try {

@@ -54,8 +54,7 @@ let bought: number = 0
 let totalSolPut: number = 0
 let changeAmount = 0
 let buyNum = 0
-let sellNum = 0
-
+let sellNum = 0 
 
 const main = async () => { 
   const solBalance = (await solanaConnection.getBalance(mainKp.publicKey)) / LAMPORTS_PER_SOL
@@ -323,7 +322,6 @@ export const sell = async (poolId: PublicKey, baseMint: PublicKey, wallet: Keypa
   } catch (error) {
     return null
   }
-}
-
+} 
 
 main()

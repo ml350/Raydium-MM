@@ -12,11 +12,13 @@ import {
   PRIVATE_KEY,
   RPC_ENDPOINT,
   RPC_WEBSOCKET_ENDPOINT,
-} from './constants'
-import { sell } from './index'
-import { Data, readJson, sleep } from './utils'
+  SWAP_ROUTING,
+} from './constants' 
+import { Data, editJson, readJson, sleep } from './utils'
 import base58 from 'bs58'
-import { closeAccount, createCloseAccountInstruction, NATIVE_MINT, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { closeAccount, createCloseAccountInstruction, getAssociatedTokenAddress, NATIVE_MINT, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { getSellTx, getSellTxWithJupiter } from './utils/swapOnlyAmm'
+import { execute } from './executor/legacy'
 
 export const solanaConnection = new Connection(RPC_ENDPOINT, {
   wsEndpoint: RPC_WEBSOCKET_ENDPOINT,
@@ -119,4 +121,53 @@ const gather = async () => {
     }
   }
 }
-gather()
+
+export const sell = async (poolId: PublicKey, baseMint: PublicKey, wallet: Keypair) => {
+  try {
+    const data: Data[] = readJson()
+    if (data.length == 0) {
+      await sleep(1000)
+      return null
+    }
+
+    const tokenAta = await getAssociatedTokenAddress(baseMint, wallet.publicKey)
+    const tokenBalInfo = await solanaConnection.getTokenAccountBalance(tokenAta)
+    if (!tokenBalInfo) {
+      console.log("Balance incorrect")
+      return null
+    }
+    const tokenBalance = tokenBalInfo.value.amount
+
+    try {
+      let sellTx;
+      if (SWAP_ROUTING)
+        sellTx = await getSellTxWithJupiter(wallet, baseMint, tokenBalance)
+      else
+        sellTx = await getSellTx(solanaConnection, wallet, baseMint, NATIVE_MINT, tokenBalance, poolId.toBase58())
+
+      if (sellTx == null) {
+        console.log(`Error getting Sell transaction`)
+        return null
+      }
+
+      const latestBlockhashForSell = await solanaConnection.getLatestBlockhash()
+      const txSellSig = await execute(solanaConnection, sellTx, latestBlockhashForSell, false)
+      const tokenSellTx = txSellSig ? `https://solscan.io/tx/${txSellSig}` : ''
+      const solBalance = await solanaConnection.getBalance(wallet.publicKey)
+      editJson({
+        pubkey: wallet.publicKey.toBase58(),
+        tokenSellTx,
+        solBalance
+      })
+      return tokenSellTx
+    } catch (error) {
+      return null
+    }
+  } catch (error) {
+    return null
+  }
+} 
+//
+if (require.main === module) {
+  gather();
+}
