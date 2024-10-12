@@ -88,12 +88,13 @@ const main = async () => {
     buyAmount: number;
   }[] | null = null
 
-  if (solBalance < (BUY_LOWER_AMOUNT + ADDITIONAL_FEE) * distritbutionNum) {
-    console.log("Sol balance is not enough for distribution")
-  }
 
   const existingData: Data[] = readJson();
   if (existingData.length == 0) {
+    if (solBalance < (BUY_LOWER_AMOUNT + ADDITIONAL_FEE) * distritbutionNum) {
+      console.log("Sol balance is not enough for distribution")
+    }
+  
     data = await distributeSol(mainKp, distritbutionNum);
     if (data === null) {
       console.log("Distribution failed");
@@ -139,8 +140,7 @@ const main = async () => {
           break
         } else {
           i++
-          console.log("Buy failed, try again")
-          console.error(result);
+          console.log("Buy failed, try again") 
           await sleep(1000)
         }
       }
