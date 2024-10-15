@@ -7,8 +7,7 @@
     "gather": "ts-node gather.ts",
     "bundle": "ts-node bundle.ts",
     "status": "ts-node status.ts",
-    "massive": "ts-node massiveBuy.ts",
-    "wallet": "ts-node wallet_accounts.ts"
+    "massive": "ts-node massiveBuy.ts",  
   },
   "dependencies": {
     "@metaplex-foundation/mpl-token-metadata": "^3.2.1",

@@ -1,0 +1,31 @@
+[
+    {
+        "privateKey": "35bbhaxSaGrtdEEHWotAy4tZj9aaExjX8pzv1hD7iKku8w81LiA1SCnDVevEh8bskTBXrV4aJive65JwgdsRkNcT",
+        "pubkey": "7ALA8Av9FFtEPfpXQE4eaef3omiskAA6h7S2YuSK8GLs",
+        "solBalance": 0.016,
+        "tokenBuyTx": null,
+        "tokenSellTx": null
+    },
+    {
+        "privateKey": "3d6zvzoTTaQJiydw5ri2SdipHJGF5HGMFTzxsQ7QBNLLMKZ9wPs321MdP3jtQNKSSKzhd1sy27UTBJDgWEc8jpms",
+        "pubkey": "7n4iUqY8XpUfQcVYjuyoQUFkmWpDw3N5Pibpj3UwaLNH",
+        "solBalance": 0.016,
+        "tokenBuyTx": null,
+        "tokenSellTx": null
+    }
+    ,
+    {
+        "privateKey": "4tYw6hjRwSwB2fhzGj5je7d4GLMFZL2tza1s85uGVZij5yz1Z8Y1hn3R6cgkYdt7WD5XcsdMbctkNBvJAKWdWKvu",
+        "pubkey": "9Ficr8yuAQTUxZtr1r1JXF1sE2UfoeoTDB1rGR74X9sK",
+        "solBalance": 0.019,
+        "tokenBuyTx": "https://solscan.io/tx/3NHintFEaAFW1nnA8DRu1vDyzNdB7Yid7putXPwNeHyXCdbSj2tPEGcDCPKh1DvX54ShnU2f3vBWZiTbGDjWMQvW",
+        "tokenSellTx": null
+    },
+    {
+        "privateKey": "4R3Ucei8skqQpZq1FbDRZKxVTcou6LAUauz6KjHbm6Egnp7KdEZo6AxwgKfcmZydhKqGQAgPTUcyESKqwhAuHARx",
+        "pubkey": "8Vt5qQbHroFhbQjhm1AYGMGSXSDbNQR54bEvE9oFdDDc",
+        "solBalance": 0.027,
+        "tokenBuyTx": null,
+        "tokenSellTx": null
+    }
+]
