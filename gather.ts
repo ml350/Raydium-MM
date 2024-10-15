@@ -9,6 +9,7 @@ import {
   LAMPORTS_PER_SOL,
 } from '@solana/web3.js'
 import {
+  POOL_ID,
   PRIVATE_KEY,
   RPC_ENDPOINT,
   RPC_WEBSOCKET_ENDPOINT,
@@ -21,7 +22,7 @@ import { getSellTx, getSellTxWithJupiter } from './utils/swapOnlyAmm'
 import { execute } from './executor/legacy'
 
 export const solanaConnection = new Connection(RPC_ENDPOINT, {
-  wsEndpoint: RPC_WEBSOCKET_ENDPOINT,
+  wsEndpoint: RPC_WEBSOCKET_ENDPOINT  
 })
 const mainKp = Keypair.fromSecretKey(base58.decode(PRIVATE_KEY))
 
@@ -82,7 +83,7 @@ const gather = async () => {
           console.log(`Swapping ${tokenBalance} of SPL tokens from ${wallet.publicKey.toBase58()}`);
           
           // Swap SPL token to WSOL using `sell` function
-          const poolId = new PublicKey("2Z9SGDsHWvdKddAkfQS5QJ7ecaj18cwcHWcsDy9CrwuN"); // Use appropriate pool
+          const poolId = new PublicKey(POOL_ID); // Use appropriate pool
           const sellTx = await sell(poolId, new PublicKey(tokenMint), wallet);
           if (sellTx) {
             console.log(`Swapped tokens for SOL from wallet ${wallet.publicKey.toBase58()}`);

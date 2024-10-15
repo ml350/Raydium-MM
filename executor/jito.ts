@@ -3,10 +3,12 @@
 
 import { Connection, Keypair, PublicKey, VersionedTransaction } from "@solana/web3.js"
 import { BLOCKENGINE_URL, JITO_FEE, JITO_KEY, RPC_ENDPOINT, RPC_WEBSOCKET_ENDPOINT } from "../constants"
-import base58 from "bs58"
-import { SearcherClient, searcherClient } from "jito-ts/dist/sdk/block-engine/searcher"
-import { Bundle } from "jito-ts/dist/sdk/block-engine/types"
+import base58 from "bs58" 
+import { searcherClient } from 'jito-ts/dist/sdk/block-engine/searcher.js';
+import { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher"
+import { Bundle } from "jito-ts/dist/sdk/block-engine/types.js";
 import { isError } from "jito-ts/dist/sdk/block-engine/utils"
+import { logger } from "../utils";
 
 const solanaConnection = new Connection(RPC_ENDPOINT, {
   wsEndpoint: RPC_WEBSOCKET_ENDPOINT,
@@ -14,44 +16,48 @@ const solanaConnection = new Connection(RPC_ENDPOINT, {
 
 export async function bundle(txs: VersionedTransaction[], keypair: Keypair) {
   try {
-    const txNum = Math.ceil(txs.length / 3)
-    let successNum = 0
+    const txNum = Math.ceil(txs.length / 3);
+    let successNum = 0;
+
     for (let i = 0; i < txNum; i++) {
-      const upperIndex = (i + 1) * 3
-      const downIndex = i * 3
-      const newTxs = []
+      const upperIndex = (i + 1) * 3;
+      const downIndex = i * 3;
+      const newTxs = [];
+      
       for (let j = downIndex; j < upperIndex; j++) {
-        if (txs[j]) newTxs.push(txs[j])
+        if (txs[j]) newTxs.push(txs[j]);
+      } 
+
+      const success = await bull_dozer(newTxs, keypair);
+      if (success) {
+        successNum++;
       }
-      let success = await bull_dozer(newTxs, keypair)
-      return success
     }
-    if (successNum == txNum) return true
-    else return false
+
+    if (successNum === txNum) return true;
+    else return false;
+
   } catch (error) {
-    return false
+    logger.error("Error in bundling transactions:", error);
+    return false;
   }
 }
 
 export async function bull_dozer(txs: VersionedTransaction[], keypair: Keypair) {
   try {
-    const bundleTransactionLimit = parseInt('4')
-    const jitoKey = Keypair.fromSecretKey(base58.decode(JITO_KEY))
-    const search = searcherClient(BLOCKENGINE_URL, jitoKey)
+    const bundleTransactionLimit = parseInt('4'); 
+    const search = searcherClient(BLOCKENGINE_URL);
 
-    await build_bundle(
-      search,
-      bundleTransactionLimit,
-      txs,
-      keypair
-    )
-    const bundle_result = await onBundleResult(search)
-    return bundle_result
+    await build_bundle(search, bundleTransactionLimit, txs, keypair);
+    const bundle_result = await onBundleResult(search);
+    
+    return bundle_result;
+
   } catch (error) {
-    return 0
+    logger.error("Error in bull_dozer:", error);
+    return false;
   }
 }
-
 
 async function build_bundle(
   search: SearcherClient,
@@ -59,29 +65,36 @@ async function build_bundle(
   txs: VersionedTransaction[],
   keypair: Keypair
 ) {
- 
-  const accounts = await search.getTipAccounts()
-  const _tipAccount = accounts[Math.min(Math.floor(Math.random() * accounts.length), 3)]
-  const tipAccount = new PublicKey(_tipAccount)
+  const accounts = await search.getTipAccounts();
+  const _tipAccount = accounts[Math.min(Math.floor(Math.random() * accounts.length), 3)];
+  const tipAccount = new PublicKey(_tipAccount);
 
-  const bund = new Bundle([], bundleTransactionLimit)
-  const resp = await solanaConnection.getLatestBlockhash("processed")
-  bund.addTransactions(...txs)
+  const bund = new Bundle([], bundleTransactionLimit);
+  const resp = await solanaConnection.getLatestBlockhash("processed");
+   
+  bund.addTransactions(...txs);
+
+  // Log transaction size 
 
   let maybeBundle = bund.addTipTx(
     keypair,
     JITO_FEE,
     tipAccount,
     resp.blockhash
-  )
+  );
 
   if (isError(maybeBundle)) {
-    throw maybeBundle
+    logger.error("Error adding tip transaction:", maybeBundle);
+    throw maybeBundle;
   }
+  
   try {
-    await search.sendBundle(maybeBundle)
-  } catch (e) { }
-  return maybeBundle
+    await search.sendBundle(maybeBundle);
+  } catch (e) {
+    logger.error("Error sending bundle:", e);
+    throw e; // Rethrow the error for further handling
+  }
+  return maybeBundle;
 }
 
 export const onBundleResult = (c: SearcherClient): Promise<number> => {
@@ -104,7 +117,7 @@ export const onBundleResult = (c: SearcherClient): Promise<number> => {
         if (isResolved == false) {
 
           if (isAccepted) {
-            // console.log(`bundle accepted, ID: ${result.bundleId}  | Slot: ${result.accepted!.slot}`)
+            logger.info(`bundle accepted, ID: ${result.bundleId}  | Slot: ${result.accepted!.slot}`)
             first += 1
             isResolved = true
             resolve(first) // Resolve with 'first' when a bundle is accepted
@@ -120,26 +133,4 @@ export const onBundleResult = (c: SearcherClient): Promise<number> => {
     )
   })
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+ 

@@ -32,6 +32,4 @@ export const LOG_LEVEL = retrieveEnvVariable('LOG_LEVEL', logger)
 export const ADDITIONAL_FEE = Number(retrieveEnvVariable('ADDITIONAL_FEE', logger))
 export const JITO_KEY = retrieveEnvVariable('JITO_KEY', logger)
 export const BLOCKENGINE_URL = retrieveEnvVariable('BLOCKENGINE_URL', logger)
-export const JITO_FEE = Number(retrieveEnvVariable('JITO_FEE', logger))
-
-
+export const JITO_FEE = Number(retrieveEnvVariable('JITO_FEE', logger)) 

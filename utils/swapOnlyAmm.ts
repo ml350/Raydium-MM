@@ -134,9 +134,9 @@ export async function formatAmmKeysById(connection: Connection, id: string): Pro
   }
 }
 
-export async function getBuyTx(solanaConnection: Connection, wallet: Keypair, baseMint: PublicKey, quoteMint: PublicKey, amount: number, targetPool: string) {
-
-  const baseInfo = await getMint(solanaConnection, baseMint)
+export async function getBuyTx(solanaConnection: Connection, wallet: Keypair, baseMint: PublicKey, quoteMint: PublicKey, amount: number, targetPool: string) { 
+  const baseInfo = await getMint(solanaConnection, baseMint);
+  
   if (baseInfo == null) {
     return null
   }

@@ -22,9 +22,9 @@ export const execute = async (connection: Connection, transaction: VersionedTran
     return ""
   } else {
     if (isBuy)
-      console.log(`Success in buy transaction: https://solscan.io/tx/${signature}`)
+      console.log(`Success in buy transaction: \n https://solscan.io/tx/${signature}`)
     else
-      console.log(`Success in Sell transaction: https://solscan.io/tx/${signature}`)
+      console.log(`Success in Sell transaction: \n https://solscan.io/tx/${signature}`)
   }
   return signature
 }
