@@ -16,27 +16,21 @@ const solanaConnection = new Connection(RPC_ENDPOINT, {
 
 export async function bundle(txs: VersionedTransaction[], keypair: Keypair) {
   try {
-    const txNum = Math.ceil(txs.length / 3);
-    let successNum = 0;
-
-    for (let i = 0; i < txNum; i++) {
-      const upperIndex = (i + 1) * 3;
-      const downIndex = i * 3;
-      const newTxs = [];
-      
-      for (let j = downIndex; j < upperIndex; j++) {
-        if (txs[j]) newTxs.push(txs[j]);
-      } 
-
-      const success = await bull_dozer(newTxs, keypair);
-      if (success) {
-        successNum++;
-      }
+    if (txs.length % 3 !== 0) {
+      logger.warn("Transaction sequence is not a multiple of 3: Adjusting...");
+      txs = txs.slice(0, Math.floor(txs.length / 3) * 3); // Trim to nearest multiple of 3
     }
 
-    if (successNum === txNum) return true;
-    else return false;
+    let successNum = 0;
 
+    for (let i = 0; i < txs.length; i += 3) {
+      const newTxs = txs.slice(i, i + 3); // Extract exactly three transactions (buy-sell-sell)
+      const success = await bull_dozer(newTxs, keypair);
+
+      if (success) successNum++;
+    }
+
+    return successNum === txs.length / 3;
   } catch (error) {
     logger.error("Error in bundling transactions:", error);
     return false;
@@ -44,19 +38,26 @@ export async function bundle(txs: VersionedTransaction[], keypair: Keypair) {
 }
 
 export async function bull_dozer(txs: VersionedTransaction[], keypair: Keypair) {
-  try {
-    const bundleTransactionLimit = parseInt('4'); 
-    const search = searcherClient(BLOCKENGINE_URL);
+  const MAX_RETRIES = 3;
+  let retries = 0;
 
-    await build_bundle(search, bundleTransactionLimit, txs, keypair);
-    const bundle_result = await onBundleResult(search);
-    
-    return bundle_result;
+  while (retries < MAX_RETRIES) {
+    try {
+      const search = searcherClient(BLOCKENGINE_URL);
+      await build_bundle(search, 4, txs, keypair); // Fixed bundleTransactionLimit to 4
+      const bundle_result = await onBundleResult(search);
 
-  } catch (error) {
-    logger.error("Error in bull_dozer:", error);
-    return false;
+      if (bundle_result) {
+        logger.info("Bundle succeeded");
+        return true;
+      }
+    } catch (error) {
+      logger.warn(`Bundle failed. Retrying... (${++retries}/${MAX_RETRIES})`, error);
+    }
   }
+
+  logger.error("Exceeded maximum retries for bull_dozer");
+  return false;
 }
 
 async function build_bundle(
@@ -116,8 +117,7 @@ export const onBundleResult = (c: SearcherClient): Promise<number> => {
         const isRejected = result.rejected
         if (isResolved == false) {
 
-          if (isAccepted) {
-            logger.info(`bundle accepted, ID: ${result.bundleId}  | Slot: ${result.accepted!.slot}`)
+          if (isAccepted) { 
             first += 1
             isResolved = true
             resolve(first) // Resolve with 'first' when a bundle is accepted

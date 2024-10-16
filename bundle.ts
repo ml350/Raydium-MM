@@ -122,41 +122,23 @@ const main = async () => {
         }
   
         // Try buying until success
-        let i = 0
-        while (true) {
-          if (i > 10) {
-            logger.error("Error in buy transaction")
-            return
+        let attempts = 0;
+        while (attempts < 3) {
+          try {
+            const buy1 = await buy(kp, baseMint, buyAmount, poolId);
+            const sell1 = await sell(poolId, baseMint, kp);
+            const sell2 = await sell(poolId, baseMint, kp);
+
+            if (buy1 && sell1 && sell2) {
+              const bundleResult = await bundle([buy1, sell1, sell2], mainKp);
+              if (bundleResult) break; // Exit loop if bundle succeeds
+            }
+          } catch (error) {
+            logger.error("Error in transaction sequence:", error);
           }
-  
-          const result = await buy(kp, baseMint, buyAmount, poolId)
-          if (result) {
-            break
-          } else {
-            i++
-            logger.error("Buy failed, try again") 
-            await sleep(1000)
-          }
+          attempts++;
         }
-  
-        await sleep(2000)
-  
-        // Try selling until success
-        let j = 0
-        while (true) {
-          if (j > 10) {
-            logger.error("Error in sell transaction")
-            return
-          }
-          const result = await sell(poolId, baseMint, kp)
-          if (result) {
-            break
-          } else {
-            j++
-            logger.error("Sell failed, try again")
-            await sleep(2000)
-          }
-        }
+        
         await sleep(4000 + distritbutionNum * BUY_INTERVAL)
       }
     })
@@ -259,26 +241,8 @@ const buy = async (newWallet: Keypair, baseMint: PublicKey, buyAmount: number, p
         if (tx == null) {
             logger.error(`Error getting buy transaction`);
             return null;
-        }
-
-        // Bundle the transaction before executing
-        const bundleResult = await bundle([tx], mainKp);
-        if (!bundleResult) {
-            logger.error(`Error sending bundled buy transaction`);
-            return null;
-        }
-
-        const tokenBuyTx = bundleResult ? `https://solscan.io/tx/${bundleResult}` : '';
-        editJson({
-            tokenBuyTx,
-            pubkey: newWallet.publicKey.toBase58(),
-            solBalance: solBalance / 10 ** 9 - buyAmount,
-        });
-
-        // Log the updated data
-        logger.info(`Updated JSON for buy: ${JSON.stringify({ tokenBuyTx, pubkey: newWallet.publicKey.toBase58() })}`);
-        
-        return tokenBuyTx;
+        } 
+        return tx;
     } catch (error) {
         logger.error(`Error in buy function: ${error}`);
         return null;
@@ -311,27 +275,9 @@ export const sell = async (poolId: PublicKey, baseMint: PublicKey, wallet: Keypa
             if (sellTx == null) {
                 logger.error(`Error getting Sell transaction`);
                 return null;
-            }
+            } 
 
-            // Bundle the transaction before executing
-            const bundleResult = await bundle([sellTx], wallet);
-            if (!bundleResult) {
-                logger.error(`Error sending bundled sell transaction`);
-                return null;
-            }
-
-            const tokenSellTx = bundleResult ? `https://solscan.io/tx/${bundleResult}` : '';
-            const solBalance = await solanaConnection.getBalance(wallet.publicKey);
-            editJson({
-                pubkey: wallet.publicKey.toBase58(),
-                tokenSellTx,
-                solBalance,
-            });
-
-            // Log the updated data
-            logger.info(`Updated JSON for sell: ${JSON.stringify({ tokenSellTx, pubkey: wallet.publicKey.toBase58() })}`);
-            
-            return tokenSellTx;
+            return sellTx;
         } catch (error) {
             logger.error(`Error in sell function: ${error}`);
             return null;
