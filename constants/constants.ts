@@ -33,3 +33,7 @@ export const ADDITIONAL_FEE = Number(retrieveEnvVariable('ADDITIONAL_FEE', logge
 export const JITO_KEY = retrieveEnvVariable('JITO_KEY', logger)
 export const BLOCKENGINE_URL = retrieveEnvVariable('BLOCKENGINE_URL', logger)
 export const JITO_FEE = Number(retrieveEnvVariable('JITO_FEE', logger)) 
+export const USE_TELEGRAM = retrieveEnvVariable('USE_TELEGRAM', logger) === 'true'
+export const TELEGRAM_BOT_TOKEN = retrieveEnvVariable('TELEGRAM_BOT_TOKEN', logger)
+export const TELEGRAM_CHAT_ID = retrieveEnvVariable('TELEGRAM_CHAT_ID', logger)
+export const ALERT_PRICE_THRESHOLD = Number(retrieveEnvVariable('ALERT_PRICE_THRESHOLD', logger))

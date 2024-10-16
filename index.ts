@@ -16,6 +16,7 @@ import {
 } from '@solana/web3.js'
 import {
   ADDITIONAL_FEE,
+  ALERT_PRICE_THRESHOLD,
   BUY_AMOUNT,
   BUY_INTERVAL_MAX,
   BUY_INTERVAL_MIN,
@@ -27,7 +28,10 @@ import {
   PRIVATE_KEY,
   RPC_ENDPOINT,
   RPC_WEBSOCKET_ENDPOINT,
+  TELEGRAM_BOT_TOKEN,
+  TELEGRAM_CHAT_ID,
   TOKEN_MINT,
+  USE_TELEGRAM,
 } from './constants'
 import { Data, editJson, readJson, saveDataToFile, sleep } from './utils'
 import base58 from 'bs58'
@@ -37,6 +41,7 @@ import { getPoolKeys } from './utils/getPoolInfo'
 import { SWAP_ROUTING } from './constants'
 import { logger } from './utils/logger'
 import { createInterface } from 'readline'
+import axios from 'axios'
 
 export const solanaConnection = new Connection(RPC_ENDPOINT, {
   wsEndpoint: RPC_WEBSOCKET_ENDPOINT 
@@ -119,7 +124,10 @@ const main = async () => {
   logger.info(`Buy upper limit amount: ${BUY_UPPER_AMOUNT}SOL`)
   logger.info(`Buy lower limit amount: ${BUY_LOWER_AMOUNT}SOL`)
   logger.info(`Distribute SOL to ${distritbutionNum} wallets`)
-
+  if(USE_TELEGRAM){
+    await sendTelegramNotification(`🤖 Raydium-MM Bot started!  \n👤 Wallet: ${mainKp.publicKey.toBase58()}  \n💰 SOL balance: ${solBalance.toFixed(3)} SOL `);
+  }
+  
   if (SWAP_ROUTING) {
     logger.info("Buy and sell with jupiter swap v6 routing")
   } else {
@@ -143,6 +151,7 @@ const main = async () => {
   if (existingData.length == 0) {
     if (solBalance < (BUY_LOWER_AMOUNT + ADDITIONAL_FEE) * distritbutionNum) {
       logger.error("Sol balance is not enough for distribution")
+       // Send Telegram notification if balance is insufficient 
     }
   
     data = await distributeSol(mainKp, distritbutionNum);
@@ -170,7 +179,11 @@ const main = async () => {
       if (IS_RANDOM)
         buyAmount = Number((Math.random() * (BUY_UPPER_AMOUNT - BUY_LOWER_AMOUNT) + BUY_LOWER_AMOUNT).toFixed(6))
       else
-        buyAmount = BUY_AMOUNT
+        buyAmount = BUY_AMOUNT 
+
+      if(solBalance < ALERT_PRICE_THRESHOLD && USE_TELEGRAM){ 
+        await sendTelegramNotification(`⚠️ WARNING ⚠️ \nWallet: ${kp.publicKey} \nBalance: ${solBalance.toFixed(3)} SOL\nBalance is below threshold: ${ALERT_PRICE_THRESHOLD} SOL. Please top up.`);
+      }      
 
       if (solBalance < ADDITIONAL_FEE) {
         logger.warn("Balance is not enough: ", solBalance, "SOL")
@@ -379,5 +392,17 @@ export const sell = async (poolId: PublicKey, baseMint: PublicKey, wallet: Keypa
     return null
   }
 } 
+
+const sendTelegramNotification = async (message: string) => {
+  const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+  try {
+    await axios.post(telegramUrl, {
+      chat_id: TELEGRAM_CHAT_ID,
+      text: message,
+    });
+  } catch (error) {
+    console.error('Error sending Telegram message:', error);
+  }
+};
 
 main()
