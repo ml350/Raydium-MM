@@ -1,2 +1,16 @@
-[ 
+[
+    {
+        "privateKey": "1njZKW8VYYVJ4UoGdyRA6zkvwk3Y7dfJVqrrxzSmJoCDKcBoHX2V8iEoeQMeaLs1EueYJrdiaK9BGz9hnsq1TRr",
+        "pubkey": "9gtTyawLqsfNdPyGC2bkRsYdkWEJoP3eEqkCu2s9xHXe",
+        "solBalance": 0.02594372,
+        "tokenBuyTx": "",
+        "tokenSellTx": null
+    },
+    {
+        "privateKey": "2BC2ri9MZSe63xMGeUzZSjvXtKg9uUhRs3exv6Wf3R4FZG1YFkz5x5tjAD7NAEbD5ZwC9VcJUmmT6yHMD2xv3VTo",
+        "pubkey": "7VC7A3ekS3N8YmMDKN3CCG9pM7scPtiDVbaUSRvWLJR7",
+        "solBalance": 0.02594372,
+        "tokenBuyTx": "",
+        "tokenSellTx": null
+    }
 ]
