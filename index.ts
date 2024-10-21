@@ -45,7 +45,8 @@ import axios from 'axios'
 import { err } from 'pino-std-serializers'
 
 export const solanaConnection = new Connection(RPC_ENDPOINT, {
-  wsEndpoint: RPC_WEBSOCKET_ENDPOINT 
+  wsEndpoint: RPC_WEBSOCKET_ENDPOINT,
+  commitment: 'finalized'
 })
 
 interface PromptAnswers {

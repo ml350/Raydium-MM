@@ -1,4 +1,4 @@
-import { Connection, VersionedTransaction } from "@solana/web3.js"; 
+import { Commitment, Connection, VersionedTransaction } from "@solana/web3.js"; 
 
 interface Blockhash {
   blockhash: string;
@@ -14,7 +14,7 @@ export const execute = async (connection: Connection, transaction: VersionedTran
       signature,
       lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
       blockhash: latestBlockhash.blockhash,
-    }, 'confirmed'
+    }
   );
 
   if (confirmation.value.err) {
