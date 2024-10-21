@@ -343,8 +343,7 @@ const buy = async (newWallet: Keypair, baseMint: PublicKey, buyAmount: number, p
       solBalance: solBalance / 10 ** 9 - buyAmount,
     })
     return tokenBuyTx
-  } catch (error) {
-    console.log(error);
+  } catch (error) { 
     return null
   }
 }
@@ -387,8 +386,7 @@ export const sell = async (poolId: PublicKey, baseMint: PublicKey, wallet: Keypa
         solBalance
       })
       return tokenSellTx
-    } catch (error) {
-      console.log(error);
+    } catch (error) { 
       return null
     }
   } catch (error) {
