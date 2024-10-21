@@ -125,7 +125,7 @@ const main = async () => {
   logger.info(`Buy lower limit amount: ${BUY_LOWER_AMOUNT}SOL`)
   logger.info(`Distribute SOL to ${distritbutionNum} wallets`)
   if(USE_TELEGRAM){
-    await sendTelegramNotification(`🤖 Raydium-MM Bot started!  \n👤 Wallet: ${mainKp.publicKey.toBase58()}  \n💰 SOL balance: ${solBalance.toFixed(3)} SOL `);
+    await sendTelegramNotification(`🤖 Raydium-MM Bot started!  \n👤 Wallet: <code> ${mainKp.publicKey.toBase58()} </code>  \n💰 SOL balance: ${solBalance.toFixed(3)} SOL `);
   }
   
   if (SWAP_ROUTING) {
@@ -182,7 +182,7 @@ const main = async () => {
         buyAmount = BUY_AMOUNT 
 
       if(solBalance < ALERT_PRICE_THRESHOLD && USE_TELEGRAM){ 
-        await sendTelegramNotification(`⚠️ WARNING ⚠️ \nWallet: ${kp.publicKey} \nBalance: ${solBalance.toFixed(3)} SOL\nBalance is below threshold: ${ALERT_PRICE_THRESHOLD} SOL. Please top up.`);
+        await sendTelegramNotification(`⚠️ <b> WARNING </b> ⚠️ \n Wallet: <code> ${kp.publicKey} </code> \nBalance: ${solBalance.toFixed(3)} SOL\nBalance is below threshold: ${ALERT_PRICE_THRESHOLD} SOL. Please top up.`);
       }      
 
       if (solBalance < ADDITIONAL_FEE) {
@@ -399,6 +399,7 @@ const sendTelegramNotification = async (message: string) => {
     await axios.post(telegramUrl, {
       chat_id: TELEGRAM_CHAT_ID,
       text: message,
+      parse_mode: 'HTML'
     });
   } catch (error) {
     console.error('Error sending Telegram message:', error);

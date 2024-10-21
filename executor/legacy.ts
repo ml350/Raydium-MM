@@ -8,7 +8,7 @@ interface Blockhash {
 export const execute = async (connection: Connection, transaction: VersionedTransaction, latestBlockhash: Blockhash, isBuy: boolean = true) => {
   const solanaConnection = connection;
 
-  const signature = await solanaConnection.sendRawTransaction(transaction.serialize(), { skipPreflight: true })
+  const signature = await solanaConnection.sendRawTransaction(transaction.serialize(), { skipPreflight: true, maxRetries: 0 })
   const confirmation = await solanaConnection.confirmTransaction(
     {
       signature,
@@ -22,9 +22,9 @@ export const execute = async (connection: Connection, transaction: VersionedTran
     return ""
   } else {
     if (isBuy)
-      console.log(`Success in buy transaction: \n https://solscan.io/tx/${signature}`)
+      console.log(`Success in Buy transaction: \nhttps://solscan.io/tx/${signature}`)
     else
-      console.log(`Success in Sell transaction: \n https://solscan.io/tx/${signature}`)
+      console.log(`Success in Sell transaction: \nhttps://solscan.io/tx/${signature}`)
   }
   return signature
 }
