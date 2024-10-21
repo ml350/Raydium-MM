@@ -82,8 +82,8 @@ async function swapOnlyAmm(connection: Connection, input: TestTxInputInfo) {
     fixedSide: 'in',
     makeTxVersion: TxVersion.V0,
     computeBudgetConfig: {
-      microLamports: 12_000 * TX_FEE,
-      units: 100_000
+      microLamports: 620000,
+      units: 201337
     }
   })
   return innerTransactions
