@@ -14,11 +14,11 @@ export const execute = async (connection: Connection, transaction: VersionedTran
       signature,
       lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
       blockhash: latestBlockhash.blockhash,
-    }
+    }, 'confirmed'
   );
 
   if (confirmation.value.err) {
-    console.log("Confrimtaion error")
+    console.log(`Confrimtaion error`, confirmation.value.err)
     return ""
   } else {
     if (isBuy)

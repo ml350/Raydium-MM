@@ -42,6 +42,7 @@ import { SWAP_ROUTING } from './constants'
 import { logger } from './utils/logger'
 import { createInterface } from 'readline'
 import axios from 'axios'
+import { err } from 'pino-std-serializers'
 
 export const solanaConnection = new Connection(RPC_ENDPOINT, {
   wsEndpoint: RPC_WEBSOCKET_ENDPOINT 
@@ -343,6 +344,7 @@ const buy = async (newWallet: Keypair, baseMint: PublicKey, buyAmount: number, p
     })
     return tokenBuyTx
   } catch (error) {
+    console.log(error);
     return null
   }
 }
@@ -386,6 +388,7 @@ export const sell = async (poolId: PublicKey, baseMint: PublicKey, wallet: Keypa
       })
       return tokenSellTx
     } catch (error) {
+      console.log(error);
       return null
     }
   } catch (error) {
