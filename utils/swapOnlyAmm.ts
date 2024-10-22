@@ -28,7 +28,7 @@ import {
 
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress, getMint } from '@solana/spl-token';
 import { logger } from '.';
-import { TOKEN_MINT, TX_FEE } from '../constants';
+import { COMPUTE_UNIT_LIMIT, COMPUTE_UNIT_PRICE, TOKEN_MINT, TX_FEE } from '../constants';
 import base58 from 'bs58';
 import { BN } from 'bn.js';
 
@@ -82,8 +82,8 @@ async function swapOnlyAmm(connection: Connection, input: TestTxInputInfo) {
     fixedSide: 'in',
     makeTxVersion: TxVersion.V0,
     computeBudgetConfig: {
-      microLamports: 620000,
-      units: 201337
+      microLamports: COMPUTE_UNIT_PRICE,
+      units: COMPUTE_UNIT_LIMIT
     }
   })
   return innerTransactions
@@ -220,7 +220,7 @@ export const getBuyTxWithJupiter = async (wallet: Keypair, baseMint: PublicKey, 
     const lamports = Math.floor(amount * 10 ** 9)
     const quoteResponse = await (
       await fetch(
-        `https://quote-api.jup.ag/v6/quote?inputMint=So11111111111111111111111111111111111111112&outputMint=${baseMint.toBase58()}&amount=${lamports}&slippageBps=100`
+        `https://quote-api.jup.ag/v6/quote?inputMint=So11111111111111111111111111111111111111112&outputMint=${baseMint.toBase58()}&amount=${lamports}&slippageBps=100&dexes=Raydium`
       )
     ).json();
 
@@ -236,7 +236,7 @@ export const getBuyTxWithJupiter = async (wallet: Keypair, baseMint: PublicKey, 
           userPublicKey: wallet.publicKey.toString(),
           wrapAndUnwrapSol: true,
           dynamicComputeUnitLimit: true,
-          prioritizationFeeLamports: 52000
+          prioritizationFeeLamports: 120000
         }),
       })
     ).json();
@@ -259,7 +259,7 @@ export const getSellTxWithJupiter = async (wallet: Keypair, baseMint: PublicKey,
   try {
     const quoteResponse = await (
       await fetch(
-        `https://quote-api.jup.ag/v6/quote?inputMint=${baseMint.toBase58()}&outputMint=So11111111111111111111111111111111111111112&amount=${amount}&slippageBps=100`
+        `https://quote-api.jup.ag/v6/quote?inputMint=${baseMint.toBase58()}&outputMint=So11111111111111111111111111111111111111112&amount=${amount}&slippageBps=100&dexes=Raydium`
       )
     ).json();
 
@@ -275,7 +275,7 @@ export const getSellTxWithJupiter = async (wallet: Keypair, baseMint: PublicKey,
           userPublicKey: wallet.publicKey.toString(),
           wrapAndUnwrapSol: true,
           dynamicComputeUnitLimit: true,
-          prioritizationFeeLamports: 52000
+          prioritizationFeeLamports: 120000
         }),
       })
     ).json();

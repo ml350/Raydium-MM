@@ -4,6 +4,9 @@ export const PRIVATE_KEY = retrieveEnvVariable('PRIVATE_KEY', logger)
 export const RPC_ENDPOINT = retrieveEnvVariable('RPC_ENDPOINT', logger)
 export const RPC_WEBSOCKET_ENDPOINT = retrieveEnvVariable('RPC_WEBSOCKET_ENDPOINT', logger)
 
+export const COMPUTE_UNIT_LIMIT = Number(retrieveEnvVariable('COMPUTE_UNIT_LIMIT', logger));
+export const COMPUTE_UNIT_PRICE = Number(retrieveEnvVariable('COMPUTE_UNIT_PRICE', logger)); 
+
 export const IS_RANDOM = retrieveEnvVariable('IS_RANDOM', logger) === 'true'
 export const SWAP_ROUTING = retrieveEnvVariable('SWAP_ROUTING', logger) === 'true'
 export const DISTRIBUTION_AMOUNT = Number(retrieveEnvVariable('DISTRIBUTION_AMOUNT', logger))
