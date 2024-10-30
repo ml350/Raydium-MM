@@ -9,6 +9,7 @@ export const COMPUTE_UNIT_PRICE = Number(retrieveEnvVariable('COMPUTE_UNIT_PRICE
 
 export const IS_RANDOM = retrieveEnvVariable('IS_RANDOM', logger) === 'true'
 export const SWAP_ROUTING = retrieveEnvVariable('SWAP_ROUTING', logger) === 'true'
+export const JUP_PRIORIZATION_FEES = Number(retrieveEnvVariable('JUP_PRIORIZATION_FEES', logger));
 export const DISTRIBUTION_AMOUNT = Number(retrieveEnvVariable('DISTRIBUTION_AMOUNT', logger))
 export const BUY_AMOUNT = Number(retrieveEnvVariable('BUY_AMOUNT', logger))
 export const BUY_UPPER_AMOUNT = Number(retrieveEnvVariable('BUY_UPPER_AMOUNT', logger))

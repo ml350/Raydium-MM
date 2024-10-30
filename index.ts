@@ -35,7 +35,7 @@ import {
 } from './constants'
 import { Data, editJson, readJson, saveDataToFile, sleep } from './utils'
 import base58 from 'bs58'
-import { getBuyTx, getBuyTxWithJupiter, getSellTx, getSellTxWithJupiter } from './utils/swapOnlyAmm'
+import { getBuyTx, getBuyTxWithJupiter, getSellTx, getSellTxWithJupiter, startBlockhashUpdater } from './utils/swapOnlyAmm'
 import { execute } from './executor/legacy' 
 import { getPoolKeys } from './utils/getPoolInfo'
 import { SWAP_ROUTING } from './constants'
@@ -43,6 +43,7 @@ import { logger } from './utils/logger'
 import { createInterface } from 'readline'
 import axios from 'axios'
 import { err } from 'pino-std-serializers'
+import { latestBlockhashData } from './utils/swapOnlyAmm';
 
 export const solanaConnection = new Connection(RPC_ENDPOINT, {
   wsEndpoint: RPC_WEBSOCKET_ENDPOINT,
@@ -126,6 +127,7 @@ const main = async () => {
   logger.info(`Buy upper limit amount: ${BUY_UPPER_AMOUNT}SOL`)
   logger.info(`Buy lower limit amount: ${BUY_LOWER_AMOUNT}SOL`)
   logger.info(`Distribute SOL to ${distritbutionNum} wallets`)
+  startBlockhashUpdater(solanaConnection);
   if(USE_TELEGRAM){
     await sendTelegramNotification(`🤖 Raydium-MM Bot started!  \n👤 Wallet: <code> ${mainKp.publicKey.toBase58()} </code>  \n💰 SOL balance: ${solBalance.toFixed(3)} SOL `);
   }
@@ -272,18 +274,17 @@ const distributeSol = async (mainKp: Keypair, distritbutionNum: number) => {
           logger.error("Error in distribution")
           return null
         }
-        const siTx = new Transaction().add(...sendSolTx)
-        const latestBlockhash = await solanaConnection.getLatestBlockhash()
+        const siTx = new Transaction().add(...sendSolTx) 
         siTx.feePayer = mainKp.publicKey
-        siTx.recentBlockhash = latestBlockhash.blockhash
+        siTx.recentBlockhash = latestBlockhashData?.blockhash
         const messageV0 = new TransactionMessage({
           payerKey: mainKp.publicKey,
-          recentBlockhash: latestBlockhash.blockhash,
+          recentBlockhash: latestBlockhashData?.blockhash ?? '',
           instructions: sendSolTx,
         }).compileToV0Message()
         const transaction = new VersionedTransaction(messageV0)
         transaction.sign([mainKp])
-        const txSig = await execute(solanaConnection, transaction, latestBlockhash)
+        const txSig = await execute(solanaConnection, transaction, latestBlockhashData!)
         const tokenBuyTx = txSig ? `https://solscan.io/tx/${txSig}` : ''
         console.log("SOL distributed ", tokenBuyTx)
         break
@@ -334,9 +335,8 @@ const buy = async (newWallet: Keypair, baseMint: PublicKey, buyAmount: number, p
     if (tx == null) {
       logger.error(`Error getting buy transaction`)
       return null
-    }
-    const latestBlockhash = await solanaConnection.getLatestBlockhash()
-    const txSig = await execute(solanaConnection, tx, latestBlockhash)
+    } 
+    const txSig = await execute(solanaConnection, tx, latestBlockhashData!)
     const tokenBuyTx = txSig ? `https://solscan.io/tx/${txSig}` : ''
     editJson({
       tokenBuyTx,
@@ -376,9 +376,8 @@ export const sell = async (poolId: PublicKey, baseMint: PublicKey, wallet: Keypa
         console.log(`Error getting Sell transaction`)
         return null
       }
-
-      const latestBlockhashForSell = await solanaConnection.getLatestBlockhash()
-      const txSellSig = await execute(solanaConnection, sellTx, latestBlockhashForSell, false)
+ 
+      const txSellSig = await execute(solanaConnection, sellTx, latestBlockhashData!, false)
       const tokenSellTx = txSellSig ? `https://solscan.io/tx/${txSellSig}` : ''
       const solBalance = await solanaConnection.getBalance(wallet.publicKey)
       editJson({

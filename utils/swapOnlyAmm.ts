@@ -23,14 +23,13 @@ import {
   PublicKey,
   Keypair,
   Connection,
-  VersionedTransaction
+  VersionedTransaction,
+  BlockhashWithExpiryBlockHeight
 } from '@solana/web3.js';
 
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress, getMint } from '@solana/spl-token';
-import { logger } from '.';
-import { COMPUTE_UNIT_LIMIT, COMPUTE_UNIT_PRICE, TOKEN_MINT, TX_FEE } from '../constants';
-import base58 from 'bs58';
-import { BN } from 'bn.js';
+import { COMPUTE_UNIT_LIMIT, COMPUTE_UNIT_PRICE, JUP_PRIORIZATION_FEES, TOKEN_MINT, TX_FEE } from '../constants';
+import { logger } from './logger';
 
 type WalletTokenAccounts = Awaited<ReturnType<typeof getWalletTokenAccount>>
 type TestTxInputInfo = {
@@ -40,6 +39,19 @@ type TestTxInputInfo = {
   slippage: Percent
   walletTokenAccounts: WalletTokenAccounts
   wallet: Keypair
+}
+
+// Shared object to store the latest blockhash and expiration
+export let latestBlockhashData: BlockhashWithExpiryBlockHeight | null = null;
+
+export function startBlockhashUpdater(connection: Connection) {
+  setInterval(async () => {
+      try {
+          latestBlockhashData = await connection.getLatestBlockhash();
+      } catch (error) {
+          logger.error('Error updating blockhash:', error);
+      }
+  }, 100);
 }
 
 async function getWalletTokenAccount(connection: Connection, wallet: PublicKey): Promise<TokenAccount[]> {
@@ -58,8 +70,7 @@ async function swapOnlyAmm(connection: Connection, input: TestTxInputInfo) {
   // -------- pre-action: get pool info --------
   const targetPoolInfo = await formatAmmKeysById(connection, input.targetPool)
   assert(targetPoolInfo, 'cannot find the target pool')
-  const poolKeys = jsonInfo2PoolKeys(targetPoolInfo) as LiquidityPoolKeys
-
+  const poolKeys = jsonInfo2PoolKeys(targetPoolInfo) as LiquidityPoolKeys 
   // -------- step 1: coumpute amount out --------
   const { amountOut, minAmountOut } = Liquidity.computeAmountOut({
     poolKeys: poolKeys,
@@ -214,7 +225,6 @@ export async function getSellTx(solanaConnection: Connection, wallet: Keypair, b
   }
 }
 
-
 export const getBuyTxWithJupiter = async (wallet: Keypair, baseMint: PublicKey, amount: number) => {
   try {
     const lamports = Math.floor(amount * 10 ** 9)
@@ -236,7 +246,7 @@ export const getBuyTxWithJupiter = async (wallet: Keypair, baseMint: PublicKey, 
           userPublicKey: wallet.publicKey.toString(),
           wrapAndUnwrapSol: true,
           dynamicComputeUnitLimit: true,
-          prioritizationFeeLamports: 120000
+          prioritizationFeeLamports: JUP_PRIORIZATION_FEES
         }),
       })
     ).json();
@@ -253,7 +263,6 @@ export const getBuyTxWithJupiter = async (wallet: Keypair, baseMint: PublicKey, 
     return null
   }
 };
-
 
 export const getSellTxWithJupiter = async (wallet: Keypair, baseMint: PublicKey, amount: string) => {
   try {
@@ -275,7 +284,7 @@ export const getSellTxWithJupiter = async (wallet: Keypair, baseMint: PublicKey,
           userPublicKey: wallet.publicKey.toString(),
           wrapAndUnwrapSol: true,
           dynamicComputeUnitLimit: true,
-          prioritizationFeeLamports: 120000
+          prioritizationFeeLamports: JUP_PRIORIZATION_FEES
         }),
       })
     ).json();
