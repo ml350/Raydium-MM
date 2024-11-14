@@ -51,7 +51,7 @@ export function startBlockhashUpdater(connection: Connection) {
       } catch (error) {
           logger.error('Error updating blockhash:', error);
       }
-  }, 100);
+  }, 200);
 }
 
 async function getWalletTokenAccount(connection: Connection, wallet: PublicKey): Promise<TokenAccount[]> {
