@@ -267,6 +267,7 @@ const distributeSol = async (mainKp: Keypair, distritbutionNum: number) => {
         })
       )
     }
+    await sleep(3000)
     let index = 0
     while (true) {
       try {
@@ -287,9 +288,8 @@ const distributeSol = async (mainKp: Keypair, distritbutionNum: number) => {
         const tokenBuyTx = txSig ? `https://solscan.io/tx/${txSig}` : ''
         console.log("SOL distributed ", tokenBuyTx)
         break
-      } catch (error) {
-        
-        logger.error("Error in distribution: ", error)
+      } catch (error) { 
+        logger.error("Error in distribution")
         index++
       }
     }
