@@ -28,7 +28,7 @@ import {
 } from '@solana/web3.js';
 
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress, getMint } from '@solana/spl-token';
-import { COMPUTE_UNIT_LIMIT, COMPUTE_UNIT_PRICE, JUP_PRIORIZATION_FEES, TOKEN_MINT, TX_FEE } from '../constants';
+import { COMPUTE_UNIT_LIMIT, COMPUTE_UNIT_PRICE, JUP_ENDPOINT, JUP_PRIORIZATION_FEES, TOKEN_MINT, TX_FEE } from '../constants';
 import { logger } from './logger';
 
 type WalletTokenAccounts = Awaited<ReturnType<typeof getWalletTokenAccount>>
@@ -230,13 +230,13 @@ export const getBuyTxWithJupiter = async (wallet: Keypair, baseMint: PublicKey, 
     const lamports = Math.floor(amount * 10 ** 9)
     const quoteResponse = await (
       await fetch(
-        `https://quote-api.jup.ag/v6/quote?inputMint=So11111111111111111111111111111111111111112&outputMint=${baseMint.toBase58()}&amount=${lamports}&slippageBps=100&dexes=Raydium`
+        `${JUP_ENDPOINT}/v6/quote?inputMint=So11111111111111111111111111111111111111112&outputMint=${baseMint.toBase58()}&amount=${lamports}&slippageBps=100&dexes=Raydium`
       )
     ).json();
 
     // get serialized transactions for the swap
     const { swapTransaction } = await (
-      await fetch("https://quote-api.jup.ag/v6/swap", {
+      await fetch(`${JUP_ENDPOINT}/v6/swap`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -268,13 +268,13 @@ export const getSellTxWithJupiter = async (wallet: Keypair, baseMint: PublicKey,
   try {
     const quoteResponse = await (
       await fetch(
-        `https://quote-api.jup.ag/v6/quote?inputMint=${baseMint.toBase58()}&outputMint=So11111111111111111111111111111111111111112&amount=${amount}&slippageBps=100&dexes=Raydium`
+        `${JUP_ENDPOINT}/v6/quote?inputMint=${baseMint.toBase58()}&outputMint=So11111111111111111111111111111111111111112&amount=${amount}&slippageBps=100&dexes=Raydium`
       )
     ).json();
 
     // get serialized transactions for the swap
     const { swapTransaction } = await (
-      await fetch("https://quote-api.jup.ag/v6/swap", {
+      await fetch(`${JUP_ENDPOINT}/v6/swap`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
