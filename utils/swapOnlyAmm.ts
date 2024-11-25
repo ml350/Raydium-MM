@@ -47,11 +47,11 @@ export let latestBlockhashData: BlockhashWithExpiryBlockHeight | null = null;
 export function startBlockhashUpdater(connection: Connection) {
   setInterval(async () => {
       try {
-          latestBlockhashData = await connection.getLatestBlockhash();
+          latestBlockhashData = await connection.getLatestBlockhash('confirmed');
       } catch (error) {
           logger.error('Error updating blockhash:', error);
       }
-  }, 200);
+  }, 30000);
 }
 
 async function getWalletTokenAccount(connection: Connection, wallet: PublicKey): Promise<TokenAccount[]> {
