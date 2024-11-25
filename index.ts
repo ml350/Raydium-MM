@@ -271,7 +271,6 @@ const distributeSol = async (mainKp: Keypair, distritbutionNum: number) => {
     while (true) {
       try {
         if (index > 3) {
-          logger.error("Error in distribution")
           return null
         }
         const siTx = new Transaction().add(...sendSolTx) 
@@ -279,7 +278,7 @@ const distributeSol = async (mainKp: Keypair, distritbutionNum: number) => {
         siTx.recentBlockhash = latestBlockhashData?.blockhash
         const messageV0 = new TransactionMessage({
           payerKey: mainKp.publicKey,
-          recentBlockhash: latestBlockhashData?.blockhash ?? '',
+          recentBlockhash: latestBlockhashData?.blockhash!,
           instructions: sendSolTx,
         }).compileToV0Message()
         const transaction = new VersionedTransaction(messageV0)
@@ -289,6 +288,8 @@ const distributeSol = async (mainKp: Keypair, distritbutionNum: number) => {
         console.log("SOL distributed ", tokenBuyTx)
         break
       } catch (error) {
+        
+        logger.error("Error in distribution: ", error)
         index++
       }
     }
